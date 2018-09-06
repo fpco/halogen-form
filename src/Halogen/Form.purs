@@ -182,7 +182,11 @@ labelled txt mk renderMsg form =
           ])
        form)
 
-wrap :: forall e a html. (Maybe (Array e) -> html -> html) -> FormBuilder e html a -> FormBuilder e html a
+wrap ::
+     forall e a html.
+     (Maybe (Array e) -> html -> html)
+  -> FormBuilder e html a
+  -> FormBuilder e html a
 wrap f (FormBuilder formBuilder) =
   FormBuilder
     (do Form {html: origHtml, value} <- formBuilder
