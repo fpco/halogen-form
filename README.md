@@ -214,3 +214,18 @@ ageInput es def =
          else Left [es.invalidAge])
     (numberInput es def)
 ```
+
+You can wrap your own custom HTML around other form builders using
+`wrap`:
+
+
+``` haskell
+wrap ::
+     forall e a html.
+     (Maybe (Array e) -> html -> html)
+  -> FormBuilder e html a
+  -> FormBuilder e html a
+```
+
+You can choose to print the error messages around an input, if you
+like. Otherwise you can display them in e.g. a list above.
