@@ -4,7 +4,9 @@ This implements formlets as in the Wadler paper
 [_The Essence of Form Abstraction_](http://homepages.inf.ed.ac.uk/slindley/papers/formlets-essence.pdf)
 for the halogen package.
 
-# Guide
+# Introduction
+
+## The component
 
 `Halogen.Form.component` provides a Halogen component to put a form
 into your HTML. Its type is:
@@ -19,6 +21,8 @@ component ::
      (Either (Array error) value) -- Output
      m
 ```
+
+## Form builders
 
 The input to the component is a `FormBuilder`, which looks like this:
 
@@ -45,6 +49,8 @@ associates form inputs with their values, if any. A given `Form` knows
 what `Int` key (provided by the `FormBuilder`) to use to pull a value
 or many values from the input.
 
+## The simplest form builder
+
 The most basic form builder would be `textInput` which has this type:
 
 ```haskell
@@ -56,6 +62,8 @@ textInput ::
 ```
 
 The `Maybe String` is the default input, if any.
+
+## Defining errors for your form
 
 A text input's value may be missing, so we provide a record telling
 the builder which error constructor from our error type `e` to use. It
@@ -85,6 +93,8 @@ printFormError msg =
 
 Which lets you use your own way of talking to explain error messages.
 
+## Using the form component in a slot
+
 With our error type defined, we can use the component and build a
 form:
 
@@ -102,6 +112,8 @@ This form will produce a `String` in the `value` given to the output
 handler. In that output handler you can send the form value to your
 `eval` function as usual.
 
+## Combining form builders
+
 We can combine form builders together with `Applicative`:
 
 ```haskell
@@ -113,6 +125,8 @@ HH.slot
          <*  Form.submitInput "Submit!")
   (\value -> Nothing)
 ```
+
+## Building records
 
 With the `(<|*>)` combinator that sits in place of `<*>`, you can
 build a record instead:
@@ -148,6 +162,8 @@ person =
   submitInput "Submit!"
 ```
 
+## Validation
+
 We can add validation to this form using the `reparse` combinator:
 
 ``` haskell
@@ -179,6 +195,8 @@ Here I've demonstrated two things:
 1. Using `reparse` on an individual form input to validate age.
 2. Using `reparse` to apply a life insurance policy on multiple
    fields.
+
+## Composability
 
 The fact that validation, input and rendering are all coupled means I
 can separate `age` into a re-usable component throughout my app:
@@ -214,6 +232,8 @@ ageInput es def =
          else Left [es.invalidAge])
     (numberInput es def)
 ```
+
+## Wrapping up
 
 You can wrap your own custom HTML around other form builders using
 `wrap`:
