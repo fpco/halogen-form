@@ -11,12 +11,14 @@ module Halogen.Form
   ,wrap
   ,labelled
   ,reparse
+  ,(<|*>)
+  ,applyFields
   -- * Halogen component
   ,component)
   where
 
 import Control.Alternative ((<|>))
-import Control.Monad.State
+import Control.Monad.State (class MonadState, State, evalState, gets, modify)
 import Data.Either (Either(..), either)
 import Data.Map (Map)
 import Data.Map as M
@@ -26,7 +28,22 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as HP
-import Prelude (class Applicative, class Apply, class Bind, class Functor, type (~>), Unit, bind, const, discard, map, mempty, pure, show, unit, (+), (<>))
+import Prelude (class Applicative, class Apply, class Bind, class Functor, type (~>), Unit, bind, const, discard, map, mempty, pure, show, unit, (+), (<$>), (<*>), (<>))
+import Prim.Row (class Nub, class Union)
+import Record (disjointUnion)
+
+applyFields
+  :: forall f inner outer combined.
+     Union inner outer combined
+  => Nub combined combined
+  => Apply f
+  => f { | inner }
+  -> f { | outer }
+  -> f { | combined }
+applyFields getInner getOuter =
+  disjointUnion <$> getInner <*> getOuter
+
+infixl 5 applyFields as <|*>
 
 -- | Build a unique form.
 newtype FormBuilder error html value =
