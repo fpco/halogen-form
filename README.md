@@ -177,6 +177,16 @@ person =
 We can add validation to this form using the `parse` combinator:
 
 ``` haskell
+parse ::
+     forall a b h e.
+     (a -> Either (Array e) b)
+  -> FormBuilder e h a
+  -> FormBuilder e h b
+```
+
+For example:
+
+``` haskell
 person ::
   forall h.
     FormBuilder
