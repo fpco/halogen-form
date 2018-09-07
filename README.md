@@ -72,11 +72,10 @@ record telling the builder which error constructor from our error type
 ``` haskell
 data FormError
   = MissingInput
-  | InvalidNumber
   -- Etc.
 
-errors :: { missing :: FormError, invalidNumber :: FormError}
-errors = {missing: MissingInput, invalidNumber: InvalidNumber}
+errors :: { missing :: FormError}
+errors = {missing: MissingInput}
 ```
 
 And then you can use `required`:
@@ -98,7 +97,6 @@ printFormError msg =
   HH.strong_
     [ HH.text
         (case msg of
-           InvalidNumber -> "Please enter a valid number."
            MissingInput -> "Please fill everything in."
     ]
 ```
@@ -233,7 +231,7 @@ errors:
 ``` haskell
 ageInput ::
      forall h e errors.
-     {invalidAge :: e, invalidNumber :: e, missing :: e | errors}
+     {invalidAge :: e, missing :: e | errors}
   -> Maybe Number
   -> FormBuilder e (Array (HH.HTML h (Query Unit))) Number
 ageInput es def =
