@@ -51,7 +51,7 @@ or many values from the input.
 
 ## The simplest form builder
 
-The most basic form builder would be `text` which has this type:
+The most basic form builder would be `Form.text` which has this type:
 
 ```haskell
 text ::
@@ -130,8 +130,8 @@ We can combine form builders together with `Applicative`:
 HH.slot
   FormSlot
   Form.component
-  (Tuple <$> Form.text errors Nothing
-         <*> Form.number errors Nothing
+  (Tuple <$> Form.required (Form.text errors Nothing)
+         <*> Form.required (Form.number errors Nothing)
          <*  Form.submitInput "Submit!")
   (\value -> Nothing)
 ```
@@ -145,8 +145,8 @@ build a record instead:
 HH.slot
   FormSlot
   Form.component
-  (     map {name: _} (Form.text errors Nothing)
-   <|*> map {age: _} (Form.number errors Nothing)
+  (     map {name: _} (Form.required (Form.text errors Nothing))
+   <|*> map {age: _} (Form.required (Form.number errors Nothing))
    <*   Form.submitInput "Submit!")
   (\value -> Nothing)
 ```
@@ -167,8 +167,8 @@ person ::
       (Array (HH.HTML h (Query Unit)))
       { name :: String, age :: Number}
 person =
-  map {name: _} (text errors Nothing) <|*>
-  map {age: _} (number errors Nothing) <*
+  map {name: _} (Form.required (Form.text errors Nothing)) <|*>
+  map {age: _} (Form.required (Form.number errors Nothing)) <*
   submitInput "Submit!"
 ```
 
@@ -189,14 +189,14 @@ person =
        if them . name == "Crocodile Hunter" || them . age > 70
          then Left [InsuranceApplicationFailed]
          else Right {approved: them . name})
-    (map {name: _} (text errors Nothing) <|*>
+    (map {name: _} (Form.text errors Nothing) <|*>
      map {age: _}
        (parse
           (\age ->
              if age > 18 && age < 100
                then Right age
                else Left [InvalidAge])
-          (number errors Nothing)) <*
+          (Form.number errors Nothing)) <*
      submitInput "Submit!")
 ```
 
@@ -222,7 +222,7 @@ ageInput def =
        if age > 18.0 && age < 100.0
          then Right age
          else Left [InvalidAge])
-    (number errors def)
+    (Form.number errors def)
 ```
 
 Or make it even more generic to be used across different types of
@@ -240,7 +240,7 @@ ageInput es def =
        if age > 18.0 && age < 100.0
          then Right age
          else Left [es.invalidAge])
-    (number es def)
+    (Form.number es def)
 ```
 
 ## Wrapping up
