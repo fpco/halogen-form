@@ -49,7 +49,7 @@ associates form inputs with their values, if any. A given `Form` knows
 what `Int` key (provided by the `FormBuilder`) to use to pull a value
 or many values from the input.
 
-## The simplest form builder
+## The simplest form builders
 
 The most basic form builder would be `Form.text` which has this type:
 
@@ -61,6 +61,15 @@ text ::
 ```
 
 The `Maybe String` is the default input, if any.
+
+Another is `number`, which is the HTML5 `number` input:
+
+```haskell
+number ::
+     forall e a.
+     Maybe Number
+  -> FormBuilder e (Array (HH.HTML a (Query Unit))) (Maybe Number)
+```
 
 ## Defining errors for your form
 
