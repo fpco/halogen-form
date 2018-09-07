@@ -51,23 +51,23 @@ or many values from the input.
 
 ## The simplest form builder
 
-The most basic form builder would be `textInput` which has this type:
+The most basic form builder would be `text` which has this type:
 
 ```haskell
-textInput ::
-     forall a e errors.
-     {missing :: e | errors}
+text ::
+     forall a e.
   -> Maybe String
-  -> FormBuilder e (Array (HH.HTML a (Query Unit))) String
+  -> FormBuilder e (Array (HH.HTML a (Query Unit))) (Maybe String)
 ```
 
 The `Maybe String` is the default input, if any.
 
 ## Defining errors for your form
 
-A text input's value may be missing, so we provide a record telling
-the builder which error constructor from our error type `e` to use. It
-looks like this:
+A text input's value may be missing, we might want to make them
+required to turn that `Maybe String` into a `String`; so we provide a
+record telling the builder which error constructor from our error type
+`e` to use. It looks like this:
 
 ``` haskell
 data FormError
@@ -78,6 +78,18 @@ data FormError
 errors :: { missing :: FormError, invalidNumber :: FormError}
 errors = {missing: MissingInput, invalidNumber: InvalidNumber}
 ```
+
+And then you can use `required`:
+
+``` haskell
+required ::
+     forall e r a html.
+     {missing :: e | r}
+  -> FormBuilder e html (Maybe a)
+  -> FormBuilder e html a
+```
+
+As `Form.required errors (Form.text Nothing)`.
 
 Elsewhere in the app, you'll have a printing function:
 
@@ -103,7 +115,7 @@ data Slot = FormSlot
 derive instance eqButtonSlot :: Eq Slot
 derive instance ordButtonSlot :: Ord Slot
 
-HH.slot FormSlot Form.component (Form.textInput errors Nothing) (\value -> Nothing)
+HH.slot FormSlot Form.component (Form.required errors (Form.text Nothing)) (\value -> Nothing)
 ```
 
 (`Halogen.Form` is imported as `Form`.)
@@ -120,8 +132,8 @@ We can combine form builders together with `Applicative`:
 HH.slot
   FormSlot
   Form.component
-  (Tuple <$> Form.textInput errors Nothing
-         <*> Form.numberInput errors Nothing
+  (Tuple <$> Form.text errors Nothing
+         <*> Form.number errors Nothing
          <*  Form.submitInput "Submit!")
   (\value -> Nothing)
 ```
@@ -135,8 +147,8 @@ build a record instead:
 HH.slot
   FormSlot
   Form.component
-  (     map {name: _} (Form.textInput errors Nothing)
-   <|*> map {age: _} (Form.numberInput errors Nothing)
+  (     map {name: _} (Form.text errors Nothing)
+   <|*> map {age: _} (Form.number errors Nothing)
    <*   Form.submitInput "Submit!")
   (\value -> Nothing)
 ```
@@ -157,14 +169,14 @@ person ::
       (Array (HH.HTML h (Query Unit)))
       { name :: String, age :: Number}
 person =
-  map {name: _} (textInput errors Nothing) <|*>
-  map {age: _} (numberInput errors Nothing) <*
+  map {name: _} (text errors Nothing) <|*>
+  map {age: _} (number errors Nothing) <*
   submitInput "Submit!"
 ```
 
 ## Validation
 
-We can add validation to this form using the `reparse` combinator:
+We can add validation to this form using the `parse` combinator:
 
 ``` haskell
 person ::
@@ -174,26 +186,26 @@ person ::
       (Array (HH.HTML h (Query Unit)))
       { approved :: String }
 person =
-  reparse
+  parse
     (\them ->
        if them . name == "Crocodile Hunter" || them . age > 70
          then Left [InsuranceApplicationFailed]
          else Right {approved: them . name})
-    (map {name: _} (textInput errors Nothing) <|*>
+    (map {name: _} (text errors Nothing) <|*>
      map {age: _}
-       (reparse
+       (parse
           (\age ->
              if age > 18 && age < 100
                then Right age
                else Left [InvalidAge])
-          (numberInput errors Nothing)) <*
+          (number errors Nothing)) <*
      submitInput "Submit!")
 ```
 
 Here I've demonstrated two things:
 
-1. Using `reparse` on an individual form input to validate age.
-2. Using `reparse` to apply a life insurance policy on multiple
+1. Using `parse` on an individual form input to validate age.
+2. Using `parse` to apply a life insurance policy on multiple
    fields.
 
 ## Composability
@@ -207,12 +219,12 @@ ageInput ::
      Maybe Number
   -> FormBuilder FormError (Array (HH.HTML h (Query Unit))) Number
 ageInput def =
-  reparse
+  parse
     (\age ->
        if age > 18.0 && age < 100.0
          then Right age
          else Left [InvalidAge])
-    (numberInput errors def)
+    (number errors def)
 ```
 
 Or make it even more generic to be used across different types of
@@ -225,12 +237,12 @@ ageInput ::
   -> Maybe Number
   -> FormBuilder e (Array (HH.HTML h (Query Unit))) Number
 ageInput es def =
-  reparse
+  parse
     (\age ->
        if age > 18.0 && age < 100.0
          then Right age
          else Left [es.invalidAge])
-    (numberInput es def)
+    (number es def)
 ```
 
 ## Wrapping up
